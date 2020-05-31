@@ -5,13 +5,10 @@ function katagoStatusHandler(status) {
         case 1:
         command.removeAttribute("disabled");
         command.setAttribute("placeholder", "Input a GTP command");
-        command.focus();
-        setTimeout(async function() {
-            if (window.controller) {
-                await window.controller.gtp.command("komi 0");
-                await window.controller.gtp.command("time_settings 0 3 1");
-            }
-        }, 0);
+        //command.focus();
+        if (window.controller) {
+            window.controller.onReady();
+        }
         break;
         case -1:
         command.setAttribute("placeholder", "Engine failed loading a weight");
