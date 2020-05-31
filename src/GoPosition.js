@@ -1,4 +1,5 @@
 // (C) 2020 ICHIKAWA, Yuji (New 3 Rs)
+import jssgf from "jssgf";
 
 export const PASS = -1;
 export const EMPTY = 0;
