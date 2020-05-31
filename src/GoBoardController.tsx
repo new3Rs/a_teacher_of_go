@@ -124,21 +124,23 @@ class GoBoardController extends Component<Props, State> {
         });
 }
     async startGame() {
-        for (let n = 0; n < this.handicap; n++) {
-            for (;;) {
-                try {
-                    this.state.model.turn = BLACK;
-                    const x = random(this.state.model.WIDTH) + 1;
-                    const y = random(this.state.model.HEIGHT) + 1;
-                    await this.gtp.command(`play black ${xy2coord(x, y)}`);
-                    await this.play(x, y);
-                    break;
-                } catch (e) {
-
+        if (this.handicap >= 2) {
+            for (let n = 0; n < this.handicap; n++) {
+                for (;;) {
+                    try {
+                        this.state.model.turn = BLACK;
+                        const x = random(this.state.model.WIDTH) + 1;
+                        const y = random(this.state.model.HEIGHT) + 1;
+                        await this.gtp.command(`play black ${xy2coord(x, y)}`);
+                        await this.play(x, y);
+                        break;
+                    } catch (e) {
+    
+                    }
                 }
             }
+            await this.enginePlay();
         }
-        await this.enginePlay();
     }
 
     lzAnalyze() {
@@ -215,7 +217,7 @@ class GoBoardController extends Component<Props, State> {
         } else if (move === "= pass") {
             const result = await this.gtp.command("final_score");
             let message = "";
-            if (result === "= Jigo") {
+            if (result === "= 0") {
                 message = "ひきわけですね"
             } else {
                 const match = result.match(/^= (B|W)\+([0-9]+)/);
