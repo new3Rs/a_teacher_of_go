@@ -46,8 +46,8 @@ class App extends Component<Props, State> {
 
     render() {
         const paragraphs = [];
-        for (const m of this.state.modalMessage.split("\n")) {
-            paragraphs.push(<p>{m}</p>);
+        for (const [i, m] of this.state.modalMessage.split("\n").entries()) {
+            paragraphs.push(<p key={`app-p-${i}`}>{m}</p>);
         }
         return (
             <div>
