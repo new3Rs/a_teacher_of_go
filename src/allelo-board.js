@@ -1,4 +1,9 @@
 import { GoPosition, EMPTY, BLACK, WHITE } from "./GoPosition";
+import WAudio from "./waudio";
+
+const playMoveSound1 = new WAudio("sounds/jump01.mp3");
+const playMoveSound2 = new WAudio("sounds/jump10.mp3");
+const capturedSound = new WAudio("sounds/powerdown07.mp3");
 
 /**
  * 配列から要素を削除する。
@@ -177,6 +182,11 @@ class AlleloBoard {
                 }
             }
             if (addIndex != null) {
+                if (color === BLACK) {
+                    playMoveSound1.play();
+                } else {
+                    playMoveSound2.play();
+                }
                 await new Promise((res, rej) => {
                     const start = Date.now();
                     const grow = () => {
@@ -207,6 +217,7 @@ class AlleloBoard {
             this.updateLeaves(boardState);
             this.updateTerritory(boardState);
             if (removeIndices.length > 0) {
+                capturedSound.play();
                 await new Promise((res, rej) => {
                     const start = Date.now();
                     const decline = () => {

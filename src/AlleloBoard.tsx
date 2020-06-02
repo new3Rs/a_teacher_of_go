@@ -5,7 +5,7 @@
 
 import React, { RefObject } from "react";
 import AlleloBoardElement from "./allelo-board";
-import { GoPosition, BLACK, WHITE, xy2coord } from "./GoPosition";
+import { GoPosition, GoPlayMove, BLACK, WHITE, xy2coord } from "./GoPosition";
 
 declare global {
     namespace JSX {
@@ -56,7 +56,7 @@ class AlleloBoard extends React.Component<Props, State> {
         this.props.onClick(x, y);
     }
 
-    async play(position: GoPosition, x: number, y: number, result: any) {
+    async play(position: GoPosition, x: number, y: number, result: GoPlayMove) {
         if (this.state.animation) {
             return;
         }

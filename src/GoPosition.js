@@ -61,6 +61,7 @@ export class GoPosition {
         result.state.set(source.state);
         result.turn = source.turn;
         result.ko = source.ko;
+        result.passes = source.passes;
         return result;
     }
 
@@ -92,6 +93,7 @@ export class GoPosition {
         this.marker1 = new Marker(this.LENGTH);
         this.marker2 = new Marker(this.LENGTH);
         this.ko = null;
+        this.passes = 0;
     }
 
     clear() {
@@ -214,35 +216,41 @@ export class GoPosition {
     }
 
     play(point) {
-        if (point === PASS) {
-            this.switchTurn();
-            return {
-                turn: this.turn,
-                point,
-                ko: this.ko,
-                captives: []
-            };
-        }
-        if (point === this.ko || this.getState(point) !== EMPTY) { // 着手禁止
+        if (this.getState(point) !== EMPTY) { // 着手禁止
             return null;
+        }
+        const turn = this.turn;
+        const ko = this.ko;
+        if (point === PASS) {
+            this.passes += 1;
+            this.ko = null;
+            this.switchTurn();
+            return new GoPlayMove(turn, point, ko, [], null);
+        }
+        this.passes = 0;
+        if (point === ko) {
+            this.ko = null;
+            this.switchTurn();
+            return new GoPlayMove(turn, point, ko, [point], null);
         }
         this.setState(point, this.turn);
         const captives = this.captureBy(point);
         const string = this.stringAt(point);
         const liberties = string.liberties.length;
-        if (liberties === 0) { // 着手禁止
-            this.setState(point, EMPTY); // restore
-            return null;
-        }
-        const ko = this.ko;
         if (captives.length === 1 && liberties === 1 && string.points.length === 1) {
             this.ko = string.liberties[0];
         } else {
             this.ko = null;
         }
-        const turn = this.turn;
         this.switchTurn();
-        return { turn, point, ko, captives, string };
+        if (liberties === 0) {
+            for (const e of string.points) {
+                this.setState(e, EMPTY);
+            }
+            return new GoPlayMove(turn, point, ko, string.points, null);
+        } else {
+            return new GoPlayMove(turn, point, ko, captives, string);
+        }
     }
 
     undoPlay(move) {
@@ -251,11 +259,17 @@ export class GoPosition {
         if (move.point === PASS) {
             return;
         }
-        this.setState(move.point, EMPTY);
-        const opponent = opponentOf(move.turn);
-        for (const p of move.captives) {
-            this.setState(p, opponent);
+        if (move.captives.includes(move.point)) {
+            for (const p of move.captives) {
+                this.setState(p, move.turn);
+            }
+        } else {
+            const opponent = opponentOf(move.turn);
+            for (const p of move.captives) {
+                this.setState(p, opponent);
+            }
         }
+        this.setState(move.point, EMPTY);
     }
 
     isLegal(point) {
@@ -441,5 +455,15 @@ class GoConnectedEmpties {
         this.points = [];
         this.blacks = [];
         this.whites = [];
+    }
+}
+
+export class GoPlayMove {
+    constructor(turn, point, ko, captives, string) {
+        this.turn = turn;
+        this.point = point;
+        this.ko = ko;
+        this.captives = captives;
+        this.string = string
     }
 }

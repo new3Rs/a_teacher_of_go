@@ -62,12 +62,11 @@
 
   <script type="text/javascript">
   if (typeof SharedArrayBuffer === "undefined") {
-    alert("This browser is not supported. Please use the latest Google Chrome.");
+    alert("Google Chromeをつかってね");
   } else {
     document.getElementById("google-chrome").setAttribute("style", "display: none;");
-    document.getElementById("stdio-container").removeAttribute("style");
     if (typeof OffscreenCanvas === "undefined") {
-      alert("We recommend the latest Google Chrome accelerating KataGo by OffscreenCanvas!");
+      alert("Google Chromeをつかってね");
     }
   }
   </script>
