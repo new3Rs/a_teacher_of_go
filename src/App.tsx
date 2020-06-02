@@ -50,7 +50,7 @@ class App extends Component<Props, State> {
             paragraphs.push(<p key={`app-p-${i}`}>{m}</p>);
         }
         return (
-            <div>
+            <div className="container">
                 <GoBoardController ref={this.controllerRef} />
                 <Modal
                     ref={this.modalRef}

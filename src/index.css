@@ -12,6 +12,10 @@ code {
     monospace;
 }
 
+.container {
+  padding: 10px;
+}
+
 .align-center {
   text-align: center;
 }
