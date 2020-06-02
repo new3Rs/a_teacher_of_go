@@ -51,7 +51,7 @@ function compileShader(gl, elem, width, height, boardWidth, boardHeight) {
     gl.compileShader(shader);
 
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        throw "Shader compile failed with: " + gl.getShaderInfoLog(shader);
+        throw new Error("Shader compile failed with: " + gl.getShaderInfoLog(shader));
     }
     return shader;
 }
@@ -67,7 +67,7 @@ function compileShader(gl, elem, width, height, boardWidth, boardHeight) {
 function getAttribLocation(gl, program, name) {
     var attributeLocation = gl.getAttribLocation(program, name);
     if (attributeLocation === -1) {
-        throw 'Can not find attribute ' + name + '.';
+        throw new Error('Can not find attribute ' + name + '.');
     }
     return attributeLocation;
 }
@@ -83,7 +83,7 @@ function getAttribLocation(gl, program, name) {
 function getUniformLocation(gl, program, name) {
     var uniformLocation = gl.getUniformLocation(program, name);
     if (uniformLocation === -1) {
-        throw 'Can not find uniform ' + name + '.';
+        throw new Error('Can not find uniform ' + name + '.');
     }
     return uniformLocation;
 }

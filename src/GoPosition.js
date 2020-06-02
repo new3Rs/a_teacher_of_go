@@ -216,9 +216,6 @@ export class GoPosition {
     }
 
     play(point) {
-        if (this.getState(point) !== EMPTY) { // 着手禁止
-            return null;
-        }
         const turn = this.turn;
         const ko = this.ko;
         if (point === PASS) {
@@ -226,6 +223,8 @@ export class GoPosition {
             this.ko = null;
             this.switchTurn();
             return new GoPlayMove(turn, point, ko, [], null);
+        } else if (this.getState(point) !== EMPTY) { // 着手禁止
+            return null;
         }
         this.passes = 0;
         if (point === ko) {

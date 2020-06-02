@@ -1,12 +1,11 @@
 /**
  * @preserve Copyright 2020 ICHIKAWA, Yuji (New 3 Rs)
  */
-/* global FS */
 
 import React, { Component, RefObject } from "react";
 import Modal from "react-modal";
 import AlleloBoard from "./AlleloBoard";
-import { GoPosition, GoPlayMove, BLACK, WHITE, PASS, xy2coord, coord2xy } from "./GoPosition";
+import { GoPosition, GoPlayMove, BLACK, PASS, xy2coord, coord2xy } from "./GoPosition";
 import Gtp from "./Gtp";
 
 function random(n: number) {
@@ -30,6 +29,7 @@ interface State {
     modalIsOpen: boolean;
     modalStyle: any;
     modalMessage: string;
+    buttonMessage: string;
 }
 
 class GoBoardController extends Component<Props, State> {
@@ -69,6 +69,7 @@ class GoBoardController extends Component<Props, State> {
                 }
             },
             modalMessage: "こんにちは！すこし まってね",
+            buttonMessage: "とじる",
         }
         this.gtp = Gtp.shared;
        this.onAfterOpenModal = this.onAfterOpenModal.bind(this);
@@ -83,7 +84,7 @@ class GoBoardController extends Component<Props, State> {
         }
         return (
             <div>
-                <p className="align-center">{this.state.turn == this.yourTurn ? "あなたのばん" : "わたしのばん"}</p>
+                <p className="align-center">{this.state.turn === this.yourTurn ? "あなたのばん" : "わたしのばん"}</p>
                 <AlleloBoard ref={this.boardRef} position={this.model} onClick={async (x: number, y: number) => await this.onClick(x, y)} />
                 <div className="align-center"><button className="button" onClick={() => { this.pass(); }}>パス</button></div>
                 <Modal
@@ -96,7 +97,7 @@ class GoBoardController extends Component<Props, State> {
                 >
                     <h2>いごのせんせい</h2>
                     {paragraphs}
-                    <button onClick={this.closeModal}>もう1ゲーム</button>
+                    <button onClick={this.closeModal}>{this.state.buttonMessage}</button>
                 </Modal>
             </div>
         );
@@ -110,6 +111,7 @@ class GoBoardController extends Component<Props, State> {
     async resetBoard() {
         await this.gtp.command("clear_board");
         this.model.clear();
+        await this.boardRef?.current?.clear();
         this.setState({ turn: this.model.turn });
 }
     async startGame() {
@@ -174,6 +176,7 @@ class GoBoardController extends Component<Props, State> {
 
     async onClick(x: number, y: number): Promise<void> {
         let turn = this.model.turn;
+        console.log("onClick", turn);
         if (turn !== this.yourTurn) {
             return;
         }
@@ -198,46 +201,33 @@ class GoBoardController extends Component<Props, State> {
         if (move === "= resign") {
             await new Promise((res, rej) => {
                 this.setState((state: State, props: Props): any => {
-                    if (this.handicap > 0) {
+                    let message = "あきらめます。まけました。";
+                    if (this.handicap > 1) {
                         this.handicap -= 1;
+                    } else {
+                        message += "\nつよい！もうおしえることはありません。\nこのちょうしで、いごのみちをまいしんしてください！"
                     }
                     return {
                         modalIsOpen: true,
-                        modalMessage: "あきらめます。まけました。\nもう1ゲームしますか？"
+                        modalMessage: message + "\nもう1ゲームしますか？",
+                        buttonMessage: "はい",
                     }
                 });
             });
         } else if (move === "= pass") {
-            const result = await this.gtp.command("final_score");
-            let message = "";
-            if (result === "= 0") {
-                message = "ひきわけですね"
-            } else {
-                const match = result.match(/^= (B|W)\+([0-9]+)/);
-                if (match) {
-                    if (match[1] === (this.yourTurn === BLACK ? "B" : "W")) {
-                        message = "まけました。つよいですね"
-                        if (this.handicap > 0) {
-                            this.handicap -= 1;
-                        }
-                    } else {
-                        message = `わたしが${match[2]}つ かちですか`
-                        this.handicap += 1;
-                    }
-                } else {
-                    console.log(result);
-                    alert("?");
-                    return;
-                }
-            }
-            await new Promise((res, rej) => {
+            this.model.play(PASS);
+            this.setState({ turn: this.model.turn });
+            if (this.model.passes < 2) {
                 this.setState((state: State, props: Props): any => {
                     return {
                         modalIsOpen: true,
-                        modalMessage: message + "\nもう1ゲームしますか？"
+                        modalMessage: "パスします\n(からすことができる きみどりは ぜんぶ からせてください。\nからすことができる きみどりがなくなったら パスしてください)",
+                        buttonMessage: "とじる",
                     }
                 });
-            });
+            } else {
+                await this.makeScore();
+            }
         } else {
             const match = move.match(/^= ([A-Z][0-9]{1,2})/);
             if (match) {
@@ -259,9 +249,13 @@ class GoBoardController extends Component<Props, State> {
 
     async pass() {
         if (this.model.turn === this.yourTurn) {
-            const result = this.model.play(PASS);
-            this.setState({ turn: this.model.turn });
-            await this.enginePlay();
+            this.model.play(PASS);
+            if (this.model.passes < 2) {
+                this.setState({ turn: this.model.turn });
+                await this.enginePlay();
+            } else {
+                await this.makeScore();
+            }
         }
     }
 
@@ -271,8 +265,44 @@ class GoBoardController extends Component<Props, State> {
 
     async closeModal(): Promise<any> {
         this.setState({ modalIsOpen: false });
-        await this.resetBoard();
-        await this.startGame();
+        if (this.state.buttonMessage === "はい") {
+            await this.resetBoard();
+            await this.startGame();
+        }
+    }
+
+    async makeScore(): Promise<void> {
+        const result = await this.gtp.command("final_score");
+        let message = "";
+        if (result === "= 0") {
+            message = "ひきわけですね"
+        } else {
+            const match = result.match(/^= (B|W)\+([0-9]+)/);
+            if (match) {
+                if (match[1] === (this.yourTurn === BLACK ? "B" : "W")) {
+                    message = `あなたの ${match[2]}つ かちですか？\nまけました。つよいですね`;
+                    if (this.handicap > 0) {
+                        this.handicap -= 1;
+                    }
+                } else {
+                    message = `わたしの ${match[2]}つ かちですか`
+                    this.handicap += 1;
+                }
+            } else {
+                console.log(result);
+                alert("?");
+                return;
+            }
+        }
+        await new Promise((res, rej) => {
+            this.setState((state: State, props: Props): any => {
+                return {
+                    modalIsOpen: true,
+                    modalMessage: message + "\nもう1ゲームしますか？",
+                    buttonMessage: "はい",
+                }
+            });
+        });
     }
 }
 

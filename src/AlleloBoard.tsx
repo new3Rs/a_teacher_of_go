@@ -1,11 +1,10 @@
 /**
  * @preserve Copyright 2020 ICHIKAWA, Yuji (New 3 Rs)
  */
-/* global FS */
 
 import React, { RefObject } from "react";
 import AlleloBoardElement from "./allelo-board";
-import { GoPosition, GoPlayMove, BLACK, WHITE, xy2coord } from "./GoPosition";
+import { GoPosition, GoPlayMove, BLACK, WHITE } from "./GoPosition";
 
 declare global {
     namespace JSX {
@@ -77,6 +76,11 @@ class AlleloBoard extends React.Component<Props, State> {
         }
         await this.boardRef?.current?.alleloBoard?.drawStone(state, result.turn === BLACK ? 1.0 : -1.0, index, result.captives);
         this.setState({ animation: false });
+    }
+
+    async clear() {
+        const state = new Float32Array(this.props.position.WIDTH * this.props.position.HEIGHT);
+        await this.boardRef?.current?.alleloBoard?.drawStone(state, 1.0, null);
     }
 }
 
