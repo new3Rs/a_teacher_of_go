@@ -10,3 +10,8 @@
 思考エンジンにはWASM KataGoを動かしています。
 碁盤描画にはHTML CanvasとSVGを使用しています。
 アプリ構成にはReactを使用しています。
+
+## ライセンス
+MIT
+
+ただし、音声ファイルについては、[初めての方へ（利用規約） - 無料効果音で遊ぼう！](https://taira-komori.jpn.org/welcome.html)を参照してください。
