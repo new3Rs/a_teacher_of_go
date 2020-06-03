@@ -55,7 +55,10 @@ class App extends Component<Props, State> {
         }
         return (
             <div className="container">
+                <p>ルール</p>
+                {paragraphs}
                 <GoBoardController ref={this.controllerRef} />
+                <small>効果音に<a href="https://taira-komori.jpn.org/index.html">無料効果音で遊ぼう！</a>様の素材を利用させていただいています</small>
                 <Modal
                     ref={this.modalRef}
                     isOpen={this.state.modalIsOpen}
