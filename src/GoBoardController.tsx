@@ -4,19 +4,10 @@
 
 import React, { Component, RefObject } from "react";
 import Modal from "react-modal";
+import { random, sleep } from "./utilities";
 import AlleloBoard from "./AlleloBoard";
 import { GoPosition, GoPlayMove, BLACK, PASS, xy2coord, coord2xy } from "./GoPosition";
 import Gtp from "./Gtp";
-
-function random(n: number) {
-    return Math.floor(Math.random() * n);
-}
-
-async function sleep(n: number): Promise<void> {
-    return new Promise(function(res, rej) {
-        setTimeout(res, n);
-    });
-}
 
 interface Props {}
 interface State {
@@ -72,7 +63,6 @@ class GoBoardController extends Component<Props, State> {
             buttonMessage: "とじる",
         }
         this.gtp = Gtp.shared;
-       this.onAfterOpenModal = this.onAfterOpenModal.bind(this);
        this.closeModal = this.closeModal.bind(this);
        this.modalRef = React.createRef();
     }
@@ -90,7 +80,6 @@ class GoBoardController extends Component<Props, State> {
                 <Modal
                     ref={this.modalRef}
                     isOpen={this.state.modalIsOpen}
-                    onAfterOpen={this.onAfterOpenModal}
                     onRequestClose={this.closeModal}
                     style={this.state.modalStyle}
                     contentLabel="セリフ"
@@ -113,7 +102,8 @@ class GoBoardController extends Component<Props, State> {
         this.model.clear();
         await this.boardRef?.current?.clear();
         this.setState({ turn: this.model.turn });
-}
+    }
+
     async startGame() {
         if (this.handicap >= 2) {
             for (let n = 0; n < this.handicap; n++) {
@@ -134,49 +124,8 @@ class GoBoardController extends Component<Props, State> {
         }
     }
 
-    lzAnalyze() {
-        this.gtp.lzAnalyze(100, (result: any) => {
-            const blackWinrate = (this.model.turn === BLACK ? result.winrate : 1 - result.winrate) * 100;
-            this.setState({
-                candidates: result,
-                percent: blackWinrate,
-                black: `${blackWinrate.toFixed(1)}%`,
-                white: `${(100 - blackWinrate).toFixed(1)}%`
-            });
-        });
-    }
-
-    kataAnalyze() {
-        this.gtp.kataAnalyze(100, (result: any) => {
-            if (result.info.length === 0) {
-                return;
-            }
-            const first = result.info[0];
-            const blackWinrate = (this.model.turn === BLACK ? first.winrate : 1.0 - first.winrate) * 100;
-            const blackScore = (this.model.turn === BLACK ? first.scoreMean : 1.0 - first.scoreMean).toFixed(1);
-            const scoreStdev = first.scoreStdev.toFixed(1);
-            let black;
-            let white;
-            if (blackWinrate >= 50) {
-                black = `${blackWinrate.toFixed(1)}%(${blackScore}±${scoreStdev})`;
-                white = `${(100 - blackWinrate).toFixed(1)}%`;
-            } else {
-                black = `${blackWinrate.toFixed(1)}%`;
-                white = `${(100 - blackWinrate).toFixed(1)}%(${-blackScore}±${scoreStdev})`;
-            }
-            this.setState({
-                candidates: result.info,
-                ownership: result.ownership,
-                percent: blackWinrate,
-                black,
-                white 
-            });
-        });
-    }
-
     async onClick(x: number, y: number): Promise<void> {
         let turn = this.model.turn;
-        console.log("onClick", turn);
         if (turn !== this.yourTurn) {
             return;
         }
@@ -196,7 +145,6 @@ class GoBoardController extends Component<Props, State> {
 
     async enginePlay() {
         const turn = this.model.turn;
-        console.log(turn);
         const move = await this.gtp.command(`genmove ${turn === BLACK ? "black" : "white"}`);
         if (move === "= resign") {
             await new Promise((res, rej) => {
@@ -237,7 +185,7 @@ class GoBoardController extends Component<Props, State> {
         }
     }
 
-    async play(x: number, y: number): Promise<GoPlayMove|null> {
+    async play(x: number, y: number): Promise<GoPlayMove | null> {
         const result = this.model.play(this.model.xyToPoint(x, y));
         if (result != null) {
             await this.boardRef.current?.play(this.model, x, y, result);
@@ -247,7 +195,7 @@ class GoBoardController extends Component<Props, State> {
         return result;
     }
 
-    async pass() {
+    async pass(): Promise<void> {
         if (this.model.turn === this.yourTurn) {
             this.model.play(PASS);
             if (this.model.passes < 2) {
@@ -259,11 +207,7 @@ class GoBoardController extends Component<Props, State> {
         }
     }
 
-    onAfterOpenModal() {
-
-    }
-
-    async closeModal(): Promise<any> {
+    async closeModal(): Promise<void> {
         this.setState({ modalIsOpen: false });
         if (this.state.buttonMessage === "はい") {
             await this.resetBoard();
@@ -275,7 +219,7 @@ class GoBoardController extends Component<Props, State> {
         const result = await this.gtp.command("final_score");
         let message = "";
         if (result === "= 0") {
-            message = "ひきわけですね"
+            message = "ひきわけですね";
         } else {
             const match = result.match(/^= (B|W)\+([0-9]+)/);
             if (match) {
@@ -289,19 +233,13 @@ class GoBoardController extends Component<Props, State> {
                     this.handicap += 1;
                 }
             } else {
-                console.log(result);
-                alert("?");
-                return;
+                throw new Error("should not reach here");
             }
         }
-        await new Promise((res, rej) => {
-            this.setState((state: State, props: Props): any => {
-                return {
-                    modalIsOpen: true,
-                    modalMessage: message + "\nもう1ゲームしますか？",
-                    buttonMessage: "はい",
-                }
-            });
+        this.setState({
+            modalIsOpen: true,
+            modalMessage: message + "\nもう1ゲームしますか？",
+            buttonMessage: "はい",
         });
     }
 }

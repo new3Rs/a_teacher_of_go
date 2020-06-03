@@ -43,8 +43,8 @@ class App extends Component<Props, State> {
                 }
             }
         }
-        this.onAfterOpenModal = this.onAfterOpenModal.bind(this);
         this.start = this.start.bind(this);
+        // katagoStatusHandlerでready時に操作するためにグローバル変数にする
         window.controller = this;
     }
 
@@ -59,7 +59,6 @@ class App extends Component<Props, State> {
                 <Modal
                     ref={this.modalRef}
                     isOpen={this.state.modalIsOpen}
-                    onAfterOpen={this.onAfterOpenModal}
                     style={this.state.modalStyle}
                     contentLabel="あいさつとルール"
                 >
@@ -82,10 +81,6 @@ class App extends Component<Props, State> {
         this.closeModal();
         await this.controllerRef.current?.setRule();
         await this.controllerRef.current?.startGame();
-    }
-
-    onAfterOpenModal() {
-
     }
 
     closeModal() {
