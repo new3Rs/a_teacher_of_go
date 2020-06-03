@@ -76,7 +76,10 @@ class GoBoardController extends Component<Props, State> {
             <div>
                 <p className="align-center">{this.state.turn === this.yourTurn ? "あなたのばん" : "わたしのばん"}</p>
                 <AlleloBoard ref={this.boardRef} position={this.model} onClick={async (x: number, y: number) => await this.onClick(x, y)} />
-                <div className="align-center"><button className="button" onClick={() => { this.pass(); }}>パス</button></div>
+                <div className="align-center">
+                    <button className="button" onClick={() => { this.pass(); }}>パス</button>
+                    <button className="button" onClick={() => { this.resign(); }}>あきらめる</button>
+                </div>
                 <Modal
                     ref={this.modalRef}
                     isOpen={this.state.modalIsOpen}
@@ -204,6 +207,16 @@ class GoBoardController extends Component<Props, State> {
             } else {
                 await this.makeScore();
             }
+        }
+    }
+
+    async resign(): Promise<void> {
+        if (this.model.turn === this.yourTurn) {
+            this.setState({
+                modalIsOpen: true,
+                modalMessage: "ありがとうございました\nもう1ゲームしますか？",
+                buttonMessage: "はい",
+            });
         }
     }
 
