@@ -1,4 +1,8 @@
-import React, { Component } from 'react';
+/**
+ * @preserve Copyright 2020 ICHIKAWA, Yuji (New 3 Rs)
+ */
+
+ import React, { Component } from 'react';
 import Modal from "react-modal";
 import GoBoardController from './GoBoardController';
 

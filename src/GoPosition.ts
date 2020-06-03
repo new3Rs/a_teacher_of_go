@@ -1,4 +1,6 @@
-// (C) 2020 ICHIKAWA, Yuji (New 3 Rs)
+/**
+ * @preserve Copyright 2020 ICHIKAWA, Yuji (New 3 Rs)
+ */
 import jssgf from "jssgf";
 
 export const PASS = -1;
@@ -8,13 +10,13 @@ export const WHITE = 2;
 export const BAN = 3;
 
 
-export function coord2xy(coord) {
+export function coord2xy(coord: string): [number, number] {
     const c = coord.charCodeAt(0);
     const x = (c < "I".charCodeAt(0) ? c + 1 : c) - "A".charCodeAt(0);
     return [x, parseInt(coord.slice(1))];
 }
 
-export function xy2coord(x, y) {
+export function xy2coord(x: number, y: number): string {
     const COORD = ["@", "A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"];
     return COORD[x] + y;
 }
@@ -24,7 +26,7 @@ export function xy2coord(x, y) {
  * @param {Integer} color 
  * @returns {Integer}
  */
-function opponentOf(color) {
+function opponentOf(color: number): number {
     switch (color) {
         case BLACK:
             return WHITE;
@@ -37,7 +39,10 @@ function opponentOf(color) {
 
 /** 盤上を再帰的に処理するときに処理済みかチェックするためのヘルパークラス */
 class Marker {
-    constructor(size) {
+    value: number;
+    marks: Int32Array;
+    
+    constructor(size: number) {
         this.value = 0;
         this.marks = new Int32Array(size);
     }
@@ -46,18 +51,28 @@ class Marker {
         this.value += 1;
     }
 
-    isMarked(point) {
+    isMarked(point: number): boolean {
         return this.marks[point] === this.value;
     }
 
-    mark(point) {
+    mark(point: number) {
         this.marks[point] = this.value;
     }
 }
 
 export class GoPosition {
-    static copy(source) {
-        const result = new GoPosition(source.WIDHT, source.HEIGHT);
+    WIDTH: number;
+    HEIGHT: number;
+    LENGTH: number;
+    marker1: Marker;
+    marker2: Marker;
+    state: Uint8Array;
+    turn: number;
+    ko: number | null;
+    passes: number;
+
+    static copy(source: GoPosition): GoPosition {
+        const result = new GoPosition(source.WIDTH, source.HEIGHT);
         result.state.set(source.state);
         result.turn = source.turn;
         result.ko = source.ko;
@@ -65,9 +80,23 @@ export class GoPosition {
         return result;
     }
 
-    static fromSgf(sgf) {
+    static fromSgf(sgf: string): GoPosition {
         const [root] = jssgf.fastParse(sgf);
-        const p = new this(parseInt(root.SZ || '19'));
+        let width = 19;
+        let height = 19;
+        if (root.SZ) {
+            if (/^[0-9]{1,2}$/.test(root.SZ)) {
+                width = parseInt(root.SZ);
+                height = width;
+            } else {
+                const match = root.SZ.match(/^([0-9]{1,2}):([0-9]{1,2})$/);
+                if (match) {
+                    width = parseInt(match[1]);
+                    height = parseInt(match[2]);
+                }
+            }
+        }
+        const p = new this(width, height);
         let node = root;
         while (node._children.length > 0) {
             node = node._children[0];
@@ -84,7 +113,7 @@ export class GoPosition {
         return p
     }
 
-    constructor(width, height) {
+    constructor(width: number, height: number) {
         this.WIDTH = width;
         this.HEIGHT = height;
         this.LENGTH = this.WIDTH * this.HEIGHT;
@@ -100,9 +129,10 @@ export class GoPosition {
         this.state = new Uint8Array(this.LENGTH);
         this.turn = BLACK;
         this.ko = null;
+        this.passes = 0;
     }
 
-    opponent() {
+    opponent(): number {
         return opponentOf(this.turn);
     }
 
@@ -110,27 +140,27 @@ export class GoPosition {
         this.turn = opponentOf(this.turn);
     }
 
-    getState(point) {
+    getState(point: number): number {
         return this.state[point];
     }
 
-    setState(point, color) {
+    setState(point: number, color: number) {
         this.state[point] = color;
     }
 
-    removeString(string) {
+    removeString(string: GoString) {
         for (const e of string.points) {
             this.setState(e, EMPTY);
         }
     }
 
-    captureBy(point) {
+    captureBy(point: number): number[] {
         const opponent = this.opponent();
-        const captives = [];
+        const captives: number[] = [];
         for (const pt of this.adjacenciesAt(point)) {
             if (this.getState(pt) === opponent) {
                 const string = this.stringAt(pt);
-                if (string.liberties.length === 0) {
+                if (string && string.liberties.length === 0) {
                     this.removeString(string);
                     captives.push.apply(captives, string.points);
                 }
@@ -139,7 +169,7 @@ export class GoPosition {
         return captives;
     }
 
-    stringAt(point) {
+    stringAt(point: number): GoString | null {
         const color = this.getState(point);
         if (color === EMPTY || color === BAN) {
             return null;
@@ -178,7 +208,7 @@ export class GoPosition {
         return string;
     }
 
-    connectedEmptiesAt(point) {
+    connectedEmptiesAt(point: number): GoConnectedEmpties | null {
         if (this.getState(point) !== EMPTY) {
             return null;
         }
@@ -215,7 +245,7 @@ export class GoPosition {
         return empties;
     }
 
-    play(point) {
+    play(point: number): GoPlayMove | null {
         const turn = this.turn;
         const ko = this.ko;
         if (point === PASS) {
@@ -235,6 +265,9 @@ export class GoPosition {
         this.setState(point, this.turn);
         const captives = this.captureBy(point);
         const string = this.stringAt(point);
+        if (string == null) {
+            throw new Error("should not reach here");
+        }
         const liberties = string.liberties.length;
         if (captives.length === 1 && liberties === 1 && string.points.length === 1) {
             this.ko = string.liberties[0];
@@ -252,7 +285,7 @@ export class GoPosition {
         }
     }
 
-    undoPlay(move) {
+    undoPlay(move: GoPlayMove) {
         this.ko = move.ko;
         this.switchTurn();
         if (move.point === PASS) {
@@ -271,7 +304,7 @@ export class GoPosition {
         this.setState(move.point, EMPTY);
     }
 
-    isLegal(point) {
+    isLegal(point: number): boolean {
         const move = this.play(point);
         if (move) {
             this.undoPlay(move);
@@ -280,17 +313,22 @@ export class GoPosition {
         return false;
     }
 
-    xyToPoint(x, y) {
+    xyToPoint(x: number, y: number): number {
         return (x - 1) + (y - 1) * this.WIDTH;
     }
 
-    pointToXy(point) {
+    pointToXy(point: number): [number, number] {
         const y = Math.floor(point / this.WIDTH);
         const x = point - y * this.WIDTH;
         return [x + 1, y + 1];
     }
 
-    adjacenciesAt(point) {
+    moveToXy(move: string): [number, number] {
+        const OFFSET = "a".charCodeAt(0) - 1;
+        return [move.charCodeAt(0) - OFFSET, move.charCodeAt(1) - OFFSET];
+    }
+
+    adjacenciesAt(point: number): number[] {
         const xy = this.pointToXy(point);
         const result = [];
         for (const e of [[0, -1], [-1, 0], [1, 0], [0, 1]]) {
@@ -303,7 +341,7 @@ export class GoPosition {
         return result;
     }
 
-    diagonalsAt(point) {
+    diagonalsAt(point: number): number[] {
         const xy = this.pointToXy(point);
         const result = [];
         for (const e of [[-1, -1], [-1, 1], [1, -1], [1, -1]]) {
@@ -314,105 +352,6 @@ export class GoPosition {
             }
         }
         return result;
-    }
-
-    canEscape(string) {
-        if (string.liberties.length > 1) { // アタリじゃない
-            return true;
-        }
-        for (const o of string.opponents) { // 相手の石を取って逃げる
-            const os = this.stringAt(o);
-            if (os.liberties.length === 1) { // アタリの石
-                const escape = this.play(os.liberties[0]);
-                if (!escape) { // 着手禁止
-                    continue;
-                }
-                const ss = this.stringAt(string.points[0]); // stringの更新
-                if (ss.liberties.length === 2) { // 取ってもまだシチョウ
-                    for (const o of ss.liberties) {
-                        const tryToCapture = this.play(o);
-                        if (!tryToCapture) {
-                            continue;
-                        }
-                        const result = this.canEscape(this.stringAt(ss.points[0]));
-                        this.undoPlay(tryToCapture);
-                        if (!result) {
-                            this.undoPlay(escape);
-                            return false;
-                        }
-                    }
-                    this.undoPlay(escape);
-                    return true;
-                } else {
-                    this.undoPlay(escape);
-                    return ss.liberties.length > 2;
-                }
-            }
-        }
-        const escape = this.play(string.liberties[0]);
-        if (!escape) {
-            return false;
-        }
-        if (escape.string.liberties.length === 2) {
-            for (const o of escape.string.liberties) {
-                const tryToCapture = this.play(o);
-                if (!tryToCapture) {
-                    continue;
-                }
-                const ss = this.stringAt(string.points[0]);
-                const result = this.canEscape(ss);
-                this.undoPlay(tryToCapture);
-                if (!result) {
-                    this.undoPlay(escape);
-                    return false;
-                }
-            }
-            this.undoPlay(escape);
-            return true;
-        } else {
-            this.undoPlay(escape);
-            return escape.string.liberties.length !== 1;
-        }
-    }
-
-    likeEye(point) {
-        if (this.getState(point) !== EMPTY) {
-            return false;
-        }
-        const adjacencies = this.adjacenciesAt(point);
-        if (!adjacencies.every(p => this.getState(p) === this.turn)) {
-            return false;
-        }
-        return adjacencies.every(p => this.stringAt(p).liberties.length > 1);
-    }
-
-    isEyeOfTurn(point, stack=[]) {
-        if (!this.likeEye(point)) {
-            return false;
-        }
-        let numBadDiagonal = 0;
-        const allowableBadDiagonal = this.adjacenciesAt(point).length === 4 ? 1 : 0;
-
-        const opponent = opponentOf(this.turn);
-        for (const d of this.diagonalsAt(point)) {
-            if (this.getState(d) === opponent) {
-                numBadDiagonal += 1;
-            } else if (this.getState(d) === EMPTY && stack.indexOf(d) < 0) {
-                stack.push(point);
-                if (!this.isEyeOfTurn(d, stack)) {
-                    numBadDiagonal += 1;
-                }
-                stack.pop();
-            }
-            if (numBadDiagonal > allowableBadDiagonal) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    isFalseEye(point) {
-        return this.likeEye(point) && !this.isEyeOfTurn(point);
     }
 
     toString() {
@@ -442,6 +381,10 @@ export class GoPosition {
 }
 
 class GoString {
+    points: number[];
+    liberties: number[];
+    opponents: number[];
+
     constructor() {
         this.points = [];
         this.liberties = [];
@@ -450,6 +393,10 @@ class GoString {
 }
 
 class GoConnectedEmpties {
+    points: number[];
+    blacks: number[];
+    whites: number[];
+
     constructor() {
         this.points = [];
         this.blacks = [];
@@ -458,7 +405,13 @@ class GoConnectedEmpties {
 }
 
 export class GoPlayMove {
-    constructor(turn, point, ko, captives, string) {
+    turn: number;
+    point: number;
+    ko: number | null;
+    captives: number[];
+    string: GoString | null;
+
+    constructor(turn: number, point: number, ko: number|null, captives: number[], string: GoString | null) {
         this.turn = turn;
         this.point = point;
         this.ko = ko;

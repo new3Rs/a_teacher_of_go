@@ -1,17 +1,25 @@
-// status-  1: ready, -1: fail
+/**
+ * @preserve Copyright 2020 ICHIKAWA, Yuji (New 3 Rs)
+ */
+
+ // status-  1: ready, -1: fail
 function katagoStatusHandler(status) {
     const command = document.getElementById("input").command
     switch (status) {
         case 1:
         command.removeAttribute("disabled");
         command.setAttribute("placeholder", "Input a GTP command");
-        //command.focus();
         if (window.controller) {
             window.controller.onReady();
         }
         break;
         case -1:
         command.setAttribute("placeholder", "Engine failed loading a weight");
+        alert("ニューラルネットワークのウェイトをロードできませんでした");
+        break;
+        default:
+        console.log("should not reach here");
+        break;
     }
 }
 

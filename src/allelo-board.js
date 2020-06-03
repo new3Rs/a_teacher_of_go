@@ -1,3 +1,7 @@
+/**
+ * @preserve Copyright 2020 ICHIKAWA, Yuji (New 3 Rs)
+ */
+
 import { GoPosition, EMPTY, BLACK, WHITE } from "./GoPosition";
 import WAudio from "./waudio";
 
