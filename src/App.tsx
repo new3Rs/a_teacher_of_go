@@ -74,13 +74,17 @@ class App extends Component<Props, State> {
     }
 
     onReady() {
-        this.setState({
-            isLoading: false,
-            modalMessage: "みどりをふやすゲームをしましょう\nあなたはこいみどり、わたしはきみどりです\nはたけのなかにたくさん みどりをふやしたほうがかちです\nはっぱをぜんぶかくされると かれます\nでは、やってみましょう"
-        });
+        // イベントループから一度切らないとloadWeightが動かないからsetTimeoutする。
+        setTimeout(async () => {
+            await this.controllerRef.current?.loadWeight();
+            this.setState({
+                isLoading: false,
+                modalMessage: "みどりをふやすゲームをしましょう\nあなたはこいみどり、わたしはきみどりです\nはたけのなかにたくさん みどりをふやしたほうがかちです\nはっぱをぜんぶかくされると かれます\nでは、やってみましょう"
+            });
+        }, 0);
     }
 
-    async start() {
+    async start(): Promise<void> {
         this.closeModal();
         await this.controllerRef.current?.setRule();
         await this.controllerRef.current?.startGame();
