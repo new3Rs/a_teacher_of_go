@@ -7,7 +7,7 @@
 着手を成長する茎で、石の接続を茎の結合で、呼吸点を葉で、ハマを上げることを茎が枯れることで表しています。
 
 ## 技術
-思考エンジンにはWASM KataGoを動かしています。
+思考エンジンには[KataGo on Browser](https://github.com/y-ich/KataGo)を動かしています。
 碁盤描画にはHTML CanvasとSVGを使用しています。
 アプリ構成にはReactを使用しています。
 
