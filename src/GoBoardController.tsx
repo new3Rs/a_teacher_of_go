@@ -212,6 +212,7 @@ class GoBoardController extends Component<Props, State> {
 
     async resign(): Promise<void> {
         if (this.model.turn === this.yourTurn) {
+            this.handicap += 1;
             this.setState({
                 modalIsOpen: true,
                 modalMessage: "ありがとうございました\nもう1ゲームしますか？",
