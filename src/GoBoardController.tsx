@@ -148,7 +148,7 @@ class GoBoardController extends Component<Props, State> {
             }
             await this.enginePlay();
         } catch (e) {
-            console.log(e);
+            console.log(e, result);
         }
     }
 
@@ -211,6 +211,11 @@ class GoBoardController extends Component<Props, State> {
                 this.setState({ turn: this.model.turn });
                 await this.enginePlay();
             } else {
+                this.setState({
+                    modalIsOpen: true,
+                    modalMessage: "おたがいのかずをけいさんします\nちょっとまってね",
+                    buttonMessage: "とじる",
+                });
                 await this.makeScore();
             }
         }
