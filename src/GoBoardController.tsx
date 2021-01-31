@@ -99,6 +99,7 @@ class GoBoardController extends Component<Props, State> {
         // webglバックエンドだとウェイトのロードに時間がかかって初回のpredictが遅いのでここで一度ロードしておく。
         await this.gtp.command(`time_settings 0 1 1`);
         await this.gtp.command("genmove black");
+        await this.gtp.command("clear_board");
     }
 
     async setRule() {
