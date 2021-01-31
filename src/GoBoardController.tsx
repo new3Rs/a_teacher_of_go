@@ -6,7 +6,7 @@ import React, { Component, RefObject } from "react";
 import Modal from "react-modal";
 import { random, sleep } from "./utilities";
 import AlleloBoard from "./AlleloBoard";
-import { GoPosition, GoPlayMove, BLACK, PASS, xy2coord, coord2xy } from "./GoPosition";
+import { GoPosition, GoPlayMove, BLACK, PASS } from "./GoPosition";
 import Gtp from "./Gtp";
 
 interface Props {}
@@ -121,7 +121,7 @@ class GoBoardController extends Component<Props, State> {
                         this.model.turn = BLACK;
                         const x = random(this.model.WIDTH) + 1;
                         const y = random(this.model.HEIGHT) + 1;
-                        await this.gtp.command(`play black ${xy2coord(x, y)}`);
+                        await this.gtp.command(`play black ${this.model.xyToCoord(x, y)}`);
                         await this.play(x, y);
                         break;
                     } catch (e) {
@@ -144,8 +144,9 @@ class GoBoardController extends Component<Props, State> {
         }
         try {
             if (!(result.captives.length === 1 && result.captives[0] === result.point)) { // 一子自殺手でなければ
-                await this.gtp.command(`play ${turn === BLACK ? "black" : "white"} ${xy2coord(x, y)}`);
+                await this.gtp.command(`play ${turn === BLACK ? "black" : "white"} ${this.model.xyToCoord(x, y)}`);
             }
+            console.log(await this.gtp.command("showboard"));
             await this.enginePlay();
         } catch (e) {
             console.log(e, result);
@@ -188,7 +189,7 @@ class GoBoardController extends Component<Props, State> {
         } else {
             const match = move.match(/^= ([A-Z][0-9]{1,2})/);
             if (match) {
-                const xy = coord2xy(match[1]);
+                const xy = this.model.coordToXy(match[1]);
                 await this.play(xy[0], xy[1]);
             }
         }

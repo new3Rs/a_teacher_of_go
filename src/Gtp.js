@@ -8,6 +8,7 @@
 class Gtp {
     static shared = new Gtp()
     constructor() {
+        this.commandStr = null;
         this.inputDom = document.getElementById("input");
         this.outputDom = document.getElementById("output");
         this.outputDom.addEventListener("message", event => {
@@ -17,6 +18,7 @@ class Gtp {
     }
 
     _command(str) {
+        this.commandStr = str;
         this.inputDom.command.value = str;
         // submitメソッドはイベントハンドラを走らせないのでdispachEventを使う
         this.inputDom.dispatchEvent(new CustomEvent('submit'));
@@ -51,6 +53,7 @@ class Gtp {
     }
 
     process(line) {
+        console.log(line);
         if (line.startsWith("=")) {
             if (this.resolve) {
                 this.resolve(line);
@@ -58,6 +61,7 @@ class Gtp {
             }
         } else if (line.startsWith("?")) {
             if (this.reject) {
+                console.log(this.commandStr, line);
                 this.reject(line);
                 this.reject = null;;
             }

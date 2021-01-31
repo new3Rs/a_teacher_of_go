@@ -10,17 +10,6 @@ export const WHITE = 2;
 export const BAN = 3;
 
 
-export function coord2xy(coord: string): [number, number] {
-    const c = coord.charCodeAt(0);
-    const x = (c < "I".charCodeAt(0) ? c + 1 : c) - "A".charCodeAt(0);
-    return [x, parseInt(coord.slice(1))];
-}
-
-export function xy2coord(x: number, y: number): string {
-    const COORD = ["@", "A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"];
-    return COORD[x] + y;
-}
-
 /**
  * 相手のカラーを返す。
  * @param {Integer} color 
@@ -377,6 +366,17 @@ export class GoPosition {
             string += '\n';
         }
         return string;
+    }
+
+    coordToXy(coord: string): [number, number] {
+        const c = coord.charCodeAt(0);
+        const x = (c < "I".charCodeAt(0) ? c + 1 : c) - "A".charCodeAt(0);
+        return [x, this.HEIGHT - parseInt(coord.slice(1)) + 1];
+    }
+    
+    xyToCoord(x: number, y: number): string {
+        const COORD = ["@", "A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"];
+        return COORD[x] + (this.HEIGHT - y + 1).toString();
     }
 }
 
