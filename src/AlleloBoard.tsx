@@ -33,8 +33,9 @@ class AlleloBoard extends React.Component<Props, State> {
     }
 
     render() {
+        let stoneSize = (document.body.clientWidth - 10 * 2 * 2) / this.props.position.WIDTH; // padding 10pxが2重にあるから
         return (
-            <allelo-board ref={this.boardRef} data-stone-size="100" data-width={this.props.position.WIDTH} data-height={this.props.position.HEIGHT}></allelo-board>
+            <allelo-board ref={this.boardRef} data-stone-size={stoneSize} data-width={this.props.position.WIDTH} data-height={this.props.position.HEIGHT}></allelo-board>
         );
     }
 
