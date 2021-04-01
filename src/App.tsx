@@ -2,7 +2,7 @@
  * @preserve Copyright 2020 ICHIKAWA, Yuji (New 3 Rs)
  */
 
- import React, { Component } from 'react';
+import React, { Component } from 'react';
 import Modal from "react-modal";
 import GoBoardController from './GoBoardController';
 
@@ -22,12 +22,10 @@ interface State {
 
 class App extends Component<Props, State> {
     controllerRef: React.RefObject<GoBoardController>;
-    modalRef: React.RefObject<Modal>;
 
     constructor(props: Props) {
         super(props);
         this.controllerRef = React.createRef();
-        this.modalRef = React.createRef();
         this.state = {
             isLoading: true,
             modalIsOpen: true,
@@ -60,7 +58,6 @@ class App extends Component<Props, State> {
                 <GoBoardController ref={this.controllerRef} />
                 <small>効果音に<a href="https://taira-komori.jpn.org/index.html">無料効果音で遊ぼう！</a>様の素材を利用させていただいています</small>
                 <Modal
-                    ref={this.modalRef}
                     isOpen={this.state.modalIsOpen}
                     style={this.state.modalStyle}
                     contentLabel="あいさつとルール"

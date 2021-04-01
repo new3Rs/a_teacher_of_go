@@ -29,7 +29,6 @@ class GoBoardController extends Component<Props, State> {
     model: GoPosition;
     gtp: Gtp;
     boardRef: RefObject<AlleloBoard>;
-    modalRef: React.RefObject<Modal>;
     handicap: number;
     yourTurn: number;
 
@@ -64,7 +63,6 @@ class GoBoardController extends Component<Props, State> {
         }
         this.gtp = Gtp.shared;
        this.closeModal = this.closeModal.bind(this);
-       this.modalRef = React.createRef();
     }
 
     render() {
@@ -81,7 +79,6 @@ class GoBoardController extends Component<Props, State> {
                     <button className="button" onClick={() => { this.resign(); }}>あきらめる</button>
                 </div>
                 <Modal
-                    ref={this.modalRef}
                     isOpen={this.state.modalIsOpen}
                     onRequestClose={this.closeModal}
                     style={this.state.modalStyle}
