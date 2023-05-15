@@ -1,5 +1,5 @@
 # いごのせんせい
-https://new3rs.herokuapp.com/a_teacher_of_go/index.html
+https://new3rs.dt.r.appspot.com/a_teacher_of_go/index.html
 
 ## 説明
 「いごのせんせい」は囲碁AIと対戦できるウェブアプリです。インストール不要でブラウザで遊べます。
